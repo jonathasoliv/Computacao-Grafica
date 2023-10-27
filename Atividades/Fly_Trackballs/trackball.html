@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset="utf-8">
+	<title>My first three.js app</title>
+
+	<style>
+		body {
+			margin: 0;
+		}
+
+		.explicacao {
+			background-color: gray;
+			color: white;
+			font-size: 1.1em;
+		}
+
+		b {
+			color: yellow;
+		}
+	</style>
+	<script src="three.js\three.js\build\three.js"></script>
+	<script src="TrackballControls.js"></script>
+</head>
+
+<body>
+	<div align="center" class="explicacao">
+		Movimente o mouse para girar. Botão do <b>MEIO</b> para o zoom.Visão panorâmica com <b>DIREITA</b>.
+		<br />
+	</div>
+
+	<script type="module">
+		
+		let WIDTH, HEIGHT, ASPECT;
+		const ORTHOGRAPHIC = 1;
+		const PERSPECTIVE = 0;
+		let cube2;
+		let sphere;
+		let stats;
+		let renderer;
+		let scene;
+		let active_camera;
+		let camera = [];
+		let controls;
+		let flagProjection = PERSPECTIVE;
+
+
+		function init() {
+			scene = new THREE.Scene();
+			camera.push(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000));
+			camera.push(new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 100));
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			const geometry = new THREE.SphereGeometry();
+			const material = new THREE.MeshBasicMaterial({ color: "yellow", wireframe: true });
+			sphere = new THREE.Mesh(geometry, material);
+			scene.add(sphere);
+
+			sphere.position.y = 2;
+			sphere.position.x = 5;
+
+			const geometry2 = new THREE.BoxGeometry();
+			const material2 = new THREE.MeshBasicMaterial({ color: "white", wireframe: true });
+			const cube = new THREE.Mesh(geometry2, material2);
+			scene.add(cube);
+
+			cube.position.y = 5;
+
+			const axesHelper = new THREE.AxesHelper(10);
+			scene.add(axesHelper);
+
+
+			window.addEventListener('resize', onWindowResize);
+			document.addEventListener('keydown', onKeyDown);
+
+
+			active_camera = camera[PERSPECTIVE];
+			active_camera.position.x = 1;
+			active_camera.position.y = 1;
+			active_camera.position.z = 5;
+
+
+			//stats = new Stats();
+			let container = document.createElement('div');
+			document.body.appendChild(container);
+			//container.appendChild(stats.dom);
+
+
+
+
+			//trackball
+			const params = {
+				OrthographicCamera: false
+			};
+			//
+			/*const gui = new GUI();
+			gui.add(params, 'OrthographicCamera').name('usar ortho').onChange(function (value) {
+				controls.dispose();
+				createControls(value ? ORTHOGRAPHIC : PERSPECTIVE);
+			});*/
+			createControls(camera);
+			//fim do trackballs
+		}
+		init();
+
+
+		function onWindowResize() {
+			WIDTH, HEIGHT = window.innerWidth, window.innerHeight;
+			ASPECT = WIDTH / HEIGHT;
+
+			active_camera.aspect = ASPECT;
+			active_camera.updateProjectionMatrix();
+
+			renderer.setSize(WIDTH, HEIGHT);
+		}
+
+		function createControls(camera) { //trackballs
+			active_camera = camera[flagProjection];
+			active_camera.position.set(1, 0.5, 10);
+
+			controls = new TrackballControls(active_camera, renderer.domElement);
+
+			controls.rotateSpeed = 1.09; //1.0;
+			controls.zoomSpeed = 1.09; //1.2;
+			controls.panSpeed = 0.8;
+
+			controls.keys = ['KeyA', 'KeyS', 'KeyD'];
+		}
+
+		function onKeyDown(event) {
+			switch (event.keyCode) {
+				case 79: //"O" muda o modo de visao da camera no ambiente
+					flagProjection = ORTHOGRAPHIC;
+					active_camera = camera[ORTHOGRAPHIC];
+					active_camera.position.set(1, 1, 5);
+					break;
+
+				case 80: //'P' muda o modo de visao da camera no ambiente
+					flagProjection = PERSPECTIVE;
+					active_camera = camera[PERSPECTIVE];
+					active_camera.position.set(1, 1, 5);
+					break;
+			}
+		}
+
+
+		let flag_mover_acima = 1;
+
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			//cube2.rotation.x += 0.01;
+			//cube2.rotation.y += 0.0;
+
+			sphere.rotation.x += 0.01;
+			sphere.rotation.y += 0.01;
+
+			if (sphere.position.y >= 3) {
+				flag_mover_acima = 1;
+			} else if (sphere.position.y <= -3) {
+				flag_mover_acima = -1;
+			}
+
+			if (flag_mover_acima == -1) {
+				sphere.position.y += 0.02;
+			} else {
+				sphere.position.y -= 0.02;
+
+			}
+
+			controls.update();
+			//stats.update();
+			renderer.render(scene, active_camera);
+		};
+
+		animate();
+	</script>
+</body>
+
+</html>
